@@ -13,10 +13,11 @@ const Home = () => {
     const fetchHomeData = async () => {
       try {
         const [prodRes, catRes] = await Promise.all([
-          api.get('/products?limit=8'),
+          api.get('/products?limit=8&sort=rating'),
           api.get('/categories')
         ]);
-        setFeaturedProducts(prodRes.data);
+        // API returns { products: [], total, page, limit }
+        setFeaturedProducts(prodRes.data.products || prodRes.data);
         setCategories(catRes.data);
       } catch (error) {
         console.error('Error fetching home data', error);

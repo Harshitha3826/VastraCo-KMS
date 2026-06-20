@@ -2,9 +2,29 @@ const ProductModel = require('../models/productModel');
 
 const getProducts = async (req, res) => {
   try {
-    const { category, search, page, limit } = req.query;
-    const products = await ProductModel.getProducts(category, search, parseInt(page) || 1, parseInt(limit) || 20);
-    res.status(200).json(products);
+    const {
+      category, search, page, limit,
+      min_price, max_price, gender, occasion,
+      material, color, brand, tags, sort
+    } = req.query;
+
+    const result = await ProductModel.getProducts({
+      categoryId: category || undefined,
+      search:     search   || undefined,
+      minPrice:   min_price !== undefined ? Number(min_price) : undefined,
+      maxPrice:   max_price !== undefined ? Number(max_price) : undefined,
+      gender:     gender   || undefined,
+      occasion:   occasion || undefined,
+      material:   material || undefined,
+      color:      color    || undefined,
+      brand:      brand    || undefined,
+      tags:       tags     || undefined,
+      sort:       sort     || 'newest',
+      page:       parseInt(page)  || 1,
+      limit:      parseInt(limit) || 20,
+    });
+
+    res.status(200).json(result);
   } catch (error) {
     console.error('getProducts error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -14,9 +34,7 @@ const getProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const product = await ProductModel.getProductById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    if (!product) return res.status(404).json({ error: 'Product not found' });
     res.status(200).json(product);
   } catch (error) {
     console.error('getProductById error:', error);
@@ -43,7 +61,6 @@ const createProduct = async (req, res) => {
     if (isNaN(price) || Number(price) < 0) {
       return res.status(400).json({ error: 'Price must be a non-negative number' });
     }
-
     const product = await ProductModel.createProduct(req.body);
     res.status(201).json(product);
   } catch (error) {
@@ -58,11 +75,8 @@ const updateProduct = async (req, res) => {
     if (price !== undefined && (isNaN(price) || Number(price) < 0)) {
       return res.status(400).json({ error: 'Price must be a non-negative number' });
     }
-
     const product = await ProductModel.updateProduct(req.params.id, req.body);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    if (!product) return res.status(404).json({ error: 'Product not found' });
     res.status(200).json(product);
   } catch (error) {
     console.error('updateProduct error:', error);
@@ -73,9 +87,7 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try {
     const deleted = await ProductModel.deleteProduct(req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    if (!deleted) return res.status(404).json({ error: 'Product not found' });
     res.status(204).send();
   } catch (error) {
     console.error('deleteProduct error:', error);
@@ -89,12 +101,10 @@ const decrementStock = async (req, res) => {
     if (!quantity || quantity <= 0) {
       return res.status(400).json({ error: 'Valid quantity is required' });
     }
-
     const updatedVariant = await ProductModel.decrementStock(req.params.id, quantity);
     if (!updatedVariant) {
       return res.status(409).json({ error: 'Insufficient stock or variant not found' });
     }
-
     res.status(200).json(updatedVariant);
   } catch (error) {
     console.error('decrementStock error:', error);
@@ -108,12 +118,10 @@ const restoreStock = async (req, res) => {
     if (!quantity || quantity <= 0) {
       return res.status(400).json({ error: 'Valid quantity is required' });
     }
-
     const updatedVariant = await ProductModel.restoreStock(req.params.id, quantity);
     if (!updatedVariant) {
       return res.status(404).json({ error: 'Variant not found' });
     }
-
     res.status(200).json(updatedVariant);
   } catch (error) {
     console.error('restoreStock error:', error);
@@ -129,5 +137,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   decrementStock,
-  restoreStock
+  restoreStock,
 };
