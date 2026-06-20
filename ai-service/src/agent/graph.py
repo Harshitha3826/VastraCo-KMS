@@ -57,7 +57,7 @@ async def run_agent_session(
         model=_llm,
         tools=tools,
         checkpointer=_memory,
-        state_modifier=SYSTEM_PROMPT,
+        prompt=SYSTEM_PROMPT,
     )
 
     config = {"configurable": {"thread_id": session_id}}

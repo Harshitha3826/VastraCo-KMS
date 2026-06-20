@@ -98,9 +98,7 @@ services:
       - vastraco-network
 
   ai-service:
-    build:
-      context: ./ai-service
-      dockerfile: Dockerfile
+    image: harshithasrinivas03/ai-service:latest
     restart: unless-stopped
     ports:
       - "3004:3004"
