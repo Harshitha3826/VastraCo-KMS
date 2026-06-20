@@ -3,13 +3,42 @@ import { Link } from 'react-router-dom';
 import { MessageCircle, X, Send, Mic, MicOff, ShoppingBag, Star } from 'lucide-react';
 import api from '../api/axios';
 
-const getSessionId = () => {
-  let id = sessionStorage.getItem('vee_session_id');
-  if (!id) {
-    id = crypto.randomUUID();
-    sessionStorage.setItem('vee_session_id', id);
+/**
+ * Cross-environment UUID v4 generator.
+ *
+ * crypto.randomUUID()       — preferred; requires HTTPS or localhost (secure context)
+ * crypto.getRandomValues()  — fallback; works on HTTP too, still cryptographically random
+ * Math.random()             — last resort; not cryptographically secure but never throws
+ */
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
   }
-  return id;
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    // RFC 4122 v4 UUID using getRandomValues
+    return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) =>
+      (+c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (+c / 4)))).toString(16)
+    );
+  }
+  // Final fallback — works in every environment, not cryptographically secure
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+};
+
+const getSessionId = () => {
+  try {
+    let id = sessionStorage.getItem('vee_session_id');
+    if (!id) {
+      id = generateUUID();
+      sessionStorage.setItem('vee_session_id', id);
+    }
+    return id;
+  } catch {
+    // sessionStorage blocked (e.g. iframe sandbox) — use an in-memory ID
+    return generateUUID();
+  }
 };
 
 const SUGGESTIONS = [
@@ -63,18 +92,9 @@ const TypingIndicator = () => (
     </div>
     <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm">
       <div className="flex gap-1 items-center">
-        <span
-          className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
-          style={{ animationDelay: '0ms' }}
-        />
-        <span
-          className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
-          style={{ animationDelay: '150ms' }}
-        />
-        <span
-          className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
-          style={{ animationDelay: '300ms' }}
-        />
+        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
       </div>
     </div>
   </div>
@@ -86,7 +106,8 @@ const AIAssistant = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [listening, setListening] = useState(false);
-  const [sessionId] = useState(getSessionId);
+  // setSessionId is used by clearChat to start a genuinely new server-side session
+  const [sessionId, setSessionId] = useState(getSessionId);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -129,9 +150,7 @@ const AIAssistant = () => {
           ...prev,
           {
             role: 'assistant',
-            text:
-              serverMsg ||
-              "I'm having trouble connecting right now. Please try again in a moment.",
+            text: serverMsg || "I'm having trouble connecting right now. Please try again in a moment.",
             products: [],
           },
         ]);
@@ -181,9 +200,14 @@ const AIAssistant = () => {
   };
 
   const clearChat = () => {
+    const newId = generateUUID();
+    try {
+      sessionStorage.setItem('vee_session_id', newId);
+    } catch {
+      // sessionStorage unavailable — the in-memory newId is still used
+    }
     setMessages([]);
-    sessionStorage.removeItem('vee_session_id');
-    sessionStorage.setItem('vee_session_id', crypto.randomUUID());
+    setSessionId(newId); // update state so subsequent messages use the new session
   };
 
   return (
@@ -219,7 +243,7 @@ const AIAssistant = () => {
               <button
                 onClick={clearChat}
                 className="text-gray-500 hover:text-gray-300 transition-colors p-1 text-xs"
-                title="Clear chat"
+                title="Start a new conversation"
               >
                 New chat
               </button>
@@ -325,11 +349,7 @@ const AIAssistant = () => {
                 aria-label={listening ? 'Stop listening' : 'Voice input'}
                 title={listening ? 'Stop listening' : 'Voice input (Chrome/Edge)'}
               >
-                {listening ? (
-                  <MicOff className="h-4 w-4" />
-                ) : (
-                  <Mic className="h-4 w-4" />
-                )}
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </button>
               <button
                 onClick={() => sendMessage()}
