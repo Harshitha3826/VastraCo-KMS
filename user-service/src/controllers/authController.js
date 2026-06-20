@@ -2,6 +2,13 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/userModel');
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'lax',
+  secure: process.env.NODE_ENV === 'production',
+  maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
 const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -16,6 +23,9 @@ const register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
 
     const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
@@ -25,6 +35,7 @@ const register = async (req, res) => {
     const user = await UserModel.createUser(name, email, password);
     const token = generateToken(user);
 
+    res.cookie('token', token, COOKIE_OPTIONS);
     res.status(201).json({ user, token });
   } catch (error) {
     console.error('Register error:', error);
@@ -52,11 +63,21 @@ const login = async (req, res) => {
     const { password_hash, ...userWithoutPassword } = user;
     const token = generateToken(userWithoutPassword);
 
+    res.cookie('token', token, COOKIE_OPTIONS);
     res.status(200).json({ user: userWithoutPassword, token });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+const logout = (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production'
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
 };
 
 const getMe = async (req, res) => {
@@ -87,9 +108,4 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = {
-  register,
-  login,
-  getMe,
-  updateProfile
-};
+module.exports = { register, login, logout, getMe, updateProfile };

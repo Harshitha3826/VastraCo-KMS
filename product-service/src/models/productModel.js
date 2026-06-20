@@ -4,7 +4,7 @@ const ProductModel = {
   async getProducts(categoryId, search, page = 1, limit = 10) {
     const offset = (page - 1) * limit;
     let query = `
-      SELECT p.*, c.name as category_name 
+      SELECT p.*, c.name as category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       WHERE 1=1
@@ -33,7 +33,7 @@ const ProductModel = {
 
   async getProductById(id) {
     const prodResult = await db.query(
-      `SELECT p.*, c.name as category_name 
+      `SELECT p.*, c.name as category_name
        FROM products p
        LEFT JOIN categories c ON p.category_id = c.id
        WHERE p.id = $1`,
@@ -60,7 +60,7 @@ const ProductModel = {
   async createProduct(data) {
     const { name, description, price, category_id, brand, image_url } = data;
     const result = await db.query(
-      `INSERT INTO products (name, description, price, category_id, brand, image_url) 
+      `INSERT INTO products (name, description, price, category_id, brand, image_url)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [name, description, price, category_id, brand, image_url]
     );
@@ -70,7 +70,7 @@ const ProductModel = {
   async updateProduct(id, data) {
     const { name, description, price, category_id, brand, image_url } = data;
     const result = await db.query(
-      `UPDATE products 
+      `UPDATE products
        SET name = COALESCE($1, name),
            description = COALESCE($2, description),
            price = COALESCE($3, price),
@@ -80,23 +80,34 @@ const ProductModel = {
        WHERE id = $7 RETURNING *`,
       [name, description, price, category_id, brand, image_url, id]
     );
-    return result.rows[0];
+    return result.rows[0] || null;
   },
 
   async deleteProduct(id) {
-    await db.query(`DELETE FROM products WHERE id = $1`, [id]);
-    return true;
+    const result = await db.query(`DELETE FROM products WHERE id = $1`, [id]);
+    return result.rowCount > 0;
   },
 
   async decrementStock(variantId, quantity) {
     const result = await db.query(
-      `UPDATE product_variants 
-       SET stock_quantity = stock_quantity - $1 
-       WHERE id = $2 AND stock_quantity >= $1 
+      `UPDATE product_variants
+       SET stock_quantity = stock_quantity - $1
+       WHERE id = $2 AND stock_quantity >= $1
        RETURNING *`,
       [quantity, variantId]
     );
-    return result.rows[0];
+    return result.rows[0] || null;
+  },
+
+  async restoreStock(variantId, quantity) {
+    const result = await db.query(
+      `UPDATE product_variants
+       SET stock_quantity = stock_quantity + $1
+       WHERE id = $2
+       RETURNING *`,
+      [quantity, variantId]
+    );
+    return result.rows[0] || null;
   }
 };
 

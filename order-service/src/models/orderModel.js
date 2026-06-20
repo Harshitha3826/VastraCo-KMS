@@ -7,7 +7,7 @@ const OrderModel = {
       await client.query('BEGIN');
 
       const orderResult = await client.query(
-        `INSERT INTO orders (user_id, status, total_amount, shipping_address) 
+        `INSERT INTO orders (user_id, status, total_amount, shipping_address)
          VALUES ($1, $2, $3, $4) RETURNING *`,
         [userId, 'pending', totalAmount, shippingAddress]
       );
@@ -15,15 +15,14 @@ const OrderModel = {
 
       for (const item of items) {
         await client.query(
-          `INSERT INTO order_items (order_id, product_id, variant_id, product_name, size, color, quantity, unit_price) 
+          `INSERT INTO order_items (order_id, product_id, variant_id, product_name, size, color, quantity, unit_price)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
           [order.id, item.product_id, item.variant_id, item.product_name, item.size, item.color, item.quantity, item.unit_price]
         );
       }
 
       await client.query('COMMIT');
-      
-      // Fetch the items to return with the order
+
       const itemsResult = await db.query(
         'SELECT * FROM order_items WHERE order_id = $1',
         [order.id]
@@ -40,38 +39,59 @@ const OrderModel = {
   },
 
   async getOrdersByUser(userId) {
+    // Single query with JOIN instead of N+1 per-order queries.
     const result = await db.query(
-      `SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC`,
+      `SELECT o.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', oi.id,
+              'product_id', oi.product_id,
+              'variant_id', oi.variant_id,
+              'product_name', oi.product_name,
+              'size', oi.size,
+              'color', oi.color,
+              'quantity', oi.quantity,
+              'unit_price', oi.unit_price
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL),
+          '[]'::json
+        ) AS items
+       FROM orders o
+       LEFT JOIN order_items oi ON oi.order_id = o.id
+       WHERE o.user_id = $1
+       GROUP BY o.id
+       ORDER BY o.created_at DESC`,
       [userId]
     );
-    const orders = result.rows;
-
-    for (const order of orders) {
-      const itemsResult = await db.query(
-        'SELECT * FROM order_items WHERE order_id = $1',
-        [order.id]
-      );
-      order.items = itemsResult.rows;
-    }
-
-    return orders;
+    return result.rows;
   },
 
   async getOrderByIdAndUser(orderId, userId) {
     const result = await db.query(
-      `SELECT * FROM orders WHERE id = $1 AND user_id = $2`,
+      `SELECT o.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', oi.id,
+              'product_id', oi.product_id,
+              'variant_id', oi.variant_id,
+              'product_name', oi.product_name,
+              'size', oi.size,
+              'color', oi.color,
+              'quantity', oi.quantity,
+              'unit_price', oi.unit_price
+            )
+          ) FILTER (WHERE oi.id IS NOT NULL),
+          '[]'::json
+        ) AS items
+       FROM orders o
+       LEFT JOIN order_items oi ON oi.order_id = o.id
+       WHERE o.id = $1 AND o.user_id = $2
+       GROUP BY o.id`,
       [orderId, userId]
     );
-    if (result.rows.length === 0) return null;
-
-    const order = result.rows[0];
-    const itemsResult = await db.query(
-      'SELECT * FROM order_items WHERE order_id = $1',
-      [order.id]
-    );
-    order.items = itemsResult.rows;
-
-    return order;
+    return result.rows[0] || null;
   },
 
   async updateOrderStatus(orderId, userId, status) {

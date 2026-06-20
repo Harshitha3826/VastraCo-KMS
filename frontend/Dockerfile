@@ -6,7 +6,8 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Stage 2: Serve
+# Stage 2: Serve — nginx drops worker processes to the nginx user automatically;
+# the master process needs root only to bind port 80.
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf

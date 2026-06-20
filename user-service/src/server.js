@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const { initDb, pool } = require('./db');
 const authRoutes = require('./routes/authRoutes');
 
@@ -10,14 +11,16 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(helmet());
-app.use(cors({ origin: ['http://localhost:3000', 'http://frontend:80', '*'] }));
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://frontend:80'],
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Routes
 app.use('/api/auth', authRoutes);
 
-// Health Probes
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -36,20 +39,17 @@ app.get('/ready', async (req, res) => {
   }
 });
 
-// Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Start Server
 const startServer = async () => {
   await initDb();
   const server = app.listen(PORT, () => {
     console.log(`User Service running on port ${PORT}`);
   });
 
-  // Graceful shutdown
   const shutdown = () => {
     console.log('SIGTERM signal received: closing HTTP server');
     server.close(() => {

@@ -7,7 +7,7 @@ import { CartContext } from '../context/CartContext';
 const Checkout = () => {
   const { cart, cartTotal, clearCart } = useContext(CartContext);
   const navigate = useNavigate();
-  
+
   const [address, setAddress] = useState({
     name: '',
     addressLine1: '',
@@ -16,7 +16,7 @@ const Checkout = () => {
     state: '',
     pincode: ''
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -24,7 +24,7 @@ const Checkout = () => {
 
   useEffect(() => {
     if (cart.length === 0 && !success) {
-      navigate('/cart');
+      navigate('/products');
     }
   }, [cart, navigate, success]);
 
@@ -95,13 +95,13 @@ const Checkout = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-heading font-bold text-gray-900 mb-8">Checkout</h1>
-      
+
       <div className="lg:grid lg:grid-cols-12 lg:gap-x-12">
         <div className="lg:col-span-7">
           <form onSubmit={handleSubmit}>
             <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
               <h2 className="text-xl font-heading font-semibold text-gray-900 mb-6">Shipping Address</h2>
-              
+
               {error && (
                 <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded text-sm">
                   {error}
@@ -112,89 +112,48 @@ const Checkout = () => {
                 <div className="sm:col-span-2">
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
                   <div className="mt-1">
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      required
-                      value={address.name}
-                      onChange={handleInputChange}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border"
-                    />
+                    <input type="text" id="name" name="name" required value={address.name} onChange={handleInputChange}
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border" />
                   </div>
                 </div>
 
                 <div className="sm:col-span-2">
                   <label htmlFor="addressLine1" className="block text-sm font-medium text-gray-700">Address Line 1</label>
                   <div className="mt-1">
-                    <input
-                      type="text"
-                      id="addressLine1"
-                      name="addressLine1"
-                      required
-                      value={address.addressLine1}
-                      onChange={handleInputChange}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border"
-                    />
+                    <input type="text" id="addressLine1" name="addressLine1" required value={address.addressLine1} onChange={handleInputChange}
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border" />
                   </div>
                 </div>
 
                 <div className="sm:col-span-2">
                   <label htmlFor="addressLine2" className="block text-sm font-medium text-gray-700">Address Line 2 (Optional)</label>
                   <div className="mt-1">
-                    <input
-                      type="text"
-                      id="addressLine2"
-                      name="addressLine2"
-                      value={address.addressLine2}
-                      onChange={handleInputChange}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border"
-                    />
+                    <input type="text" id="addressLine2" name="addressLine2" value={address.addressLine2} onChange={handleInputChange}
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border" />
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label>
                   <div className="mt-1">
-                    <input
-                      type="text"
-                      id="city"
-                      name="city"
-                      required
-                      value={address.city}
-                      onChange={handleInputChange}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border"
-                    />
+                    <input type="text" id="city" name="city" required value={address.city} onChange={handleInputChange}
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border" />
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label>
                   <div className="mt-1">
-                    <input
-                      type="text"
-                      id="state"
-                      name="state"
-                      required
-                      value={address.state}
-                      onChange={handleInputChange}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border"
-                    />
+                    <input type="text" id="state" name="state" required value={address.state} onChange={handleInputChange}
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border" />
                   </div>
                 </div>
 
                 <div className="sm:col-span-2">
                   <label htmlFor="pincode" className="block text-sm font-medium text-gray-700">Pincode</label>
                   <div className="mt-1">
-                    <input
-                      type="text"
-                      id="pincode"
-                      name="pincode"
-                      required
-                      value={address.pincode}
-                      onChange={handleInputChange}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border"
-                    />
+                    <input type="text" id="pincode" name="pincode" required value={address.pincode} onChange={handleInputChange}
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-accent focus:border-brand-accent sm:text-sm px-3 py-2 border" />
                   </div>
                 </div>
               </div>
@@ -203,8 +162,8 @@ const Checkout = () => {
                 <button
                   type="submit"
                   disabled={loading || cart.length === 0}
-                  className={`w-full flex justify-center py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-brand-dark 
-                    ${loading || cart.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-brand-accent hover:bg-yellow-500'} 
+                  className={`w-full flex justify-center py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-brand-dark
+                    ${loading || cart.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-brand-accent hover:bg-yellow-500'}
                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent transition-colors`}
                 >
                   {loading ? 'Processing...' : 'Place Order'}
@@ -214,19 +173,15 @@ const Checkout = () => {
           </form>
         </div>
 
-        {/* Order Summary */}
         <div className="mt-10 lg:mt-0 lg:col-span-5">
           <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <h2 className="text-xl font-heading font-semibold text-gray-900 mb-6">Order Summary</h2>
-            
+
             <ul role="list" className="divide-y divide-gray-200">
               {cart.map((item) => (
                 <li key={item.variant_id} className="py-4 flex">
-                  <img
-                    src={item.image_url}
-                    alt={item.product_name}
-                    className="flex-none w-16 h-16 rounded-md object-center object-cover border border-gray-200"
-                  />
+                  <img src={item.image_url} alt={item.product_name}
+                    className="flex-none w-16 h-16 rounded-md object-center object-cover border border-gray-200" />
                   <div className="ml-4 flex-auto">
                     <h3 className="font-medium text-gray-900">{item.product_name}</h3>
                     <p className="text-sm text-gray-500">Color: {item.color} | Size: {item.size}</p>

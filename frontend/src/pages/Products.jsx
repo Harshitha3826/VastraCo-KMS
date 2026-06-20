@@ -9,10 +9,15 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const categoryParam = searchParams.get('category') || '';
   const searchParam = searchParams.get('search') || '';
+
+  // Keep the search input in sync when the URL changes (e.g. browser back/forward).
   const [searchTerm, setSearchTerm] = useState(searchParam);
+  useEffect(() => {
+    setSearchTerm(searchParam);
+  }, [searchParam]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -32,14 +37,13 @@ const Products = () => {
       try {
         let url = '/products?limit=50';
         if (categoryParam) {
-          // Find category ID
           const cat = categories.find(c => c.name === categoryParam);
           if (cat) url += `&category=${cat.id}`;
         }
         if (searchParam) {
-          url += `&search=${searchParam}`;
+          url += `&search=${encodeURIComponent(searchParam)}`;
         }
-        
+
         const res = await api.get(url);
         setProducts(res.data);
       } catch (error) {
@@ -48,7 +52,7 @@ const Products = () => {
         setLoading(false);
       }
     };
-    
+
     if (categories.length > 0 || !categoryParam) {
       fetchProducts();
     }
@@ -81,7 +85,7 @@ const Products = () => {
         <h1 className="text-3xl font-heading font-bold text-gray-900">
           {categoryParam ? categoryParam : 'All Products'}
         </h1>
-        
+
         <form onSubmit={handleSearch} className="relative w-full md:w-96">
           <input
             type="text"
@@ -95,7 +99,6 @@ const Products = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar Filters */}
         <div className="w-full lg:w-64 flex-shrink-0">
           <div className="bg-white p-6 rounded-lg border border-gray-200">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Categories</h3>
@@ -122,10 +125,9 @@ const Products = () => {
           </div>
         </div>
 
-        {/* Product Grid */}
         <div className="flex-1">
           {loading ? (
-             <div className="flex justify-center py-20">Loading products...</div>
+            <div className="flex justify-center py-20">Loading products...</div>
           ) : products.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map(product => (
@@ -135,8 +137,8 @@ const Products = () => {
           ) : (
             <div className="text-center py-20">
               <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
-              <button 
-                onClick={() => setSearchParams({})} 
+              <button
+                onClick={() => setSearchParams({})}
                 className="mt-4 text-brand-accent hover:underline"
               >
                 Clear all filters

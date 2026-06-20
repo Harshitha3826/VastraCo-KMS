@@ -1,6 +1,6 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, LogOut, Menu } from 'lucide-react';
+import { ShoppingBag, User, LogOut, Menu, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
 
@@ -8,11 +8,14 @@ const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const { cart, setIsCartOpen } = useContext(CartContext);
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
@@ -30,10 +33,12 @@ const Navbar = () => {
               <Link to="/products?category=Women's Dresses" className="hover:text-brand-accent px-3 py-2 rounded-md text-sm font-medium transition-colors">Women</Link>
             </div>
           </div>
+
           <div className="flex items-center space-x-6">
-            <button 
+            <button
               onClick={() => setIsCartOpen(true)}
               className="relative hover:text-brand-accent transition-colors"
+              aria-label="Open cart"
             >
               <ShoppingBag className="h-6 w-6" />
               {cartItemCount > 0 && (
@@ -42,13 +47,13 @@ const Navbar = () => {
                 </span>
               )}
             </button>
-            
+
             {user ? (
-              <div className="relative group flex items-center space-x-4">
-                <Link to="/orders" className="hover:text-brand-accent transition-colors">
+              <div className="flex items-center space-x-4">
+                <Link to="/orders" className="hover:text-brand-accent transition-colors" aria-label="My orders">
                   <User className="h-6 w-6" />
                 </Link>
-                <button onClick={handleLogout} className="hover:text-brand-accent transition-colors" title="Logout">
+                <button onClick={handleLogout} className="hover:text-brand-accent transition-colors" title="Logout" aria-label="Logout">
                   <LogOut className="h-5 w-5" />
                 </button>
               </div>
@@ -57,15 +62,45 @@ const Navbar = () => {
                 Login / Register
               </Link>
             )}
-            
-            <div className="md:hidden flex items-center">
-              <button className="hover:text-brand-accent">
-                <Menu className="h-6 w-6" />
+
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(prev => !prev)}
+                className="hover:text-brand-accent transition-colors"
+                aria-label="Toggle mobile menu"
+              >
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-brand-dark border-t border-gray-700 px-4 pt-2 pb-4 space-y-1">
+          <Link
+            to="/products"
+            onClick={closeMobileMenu}
+            className="block px-3 py-2 rounded-md text-base font-medium hover:text-brand-accent transition-colors"
+          >
+            Shop
+          </Link>
+          <Link
+            to="/products?category=Men's Shirts"
+            onClick={closeMobileMenu}
+            className="block px-3 py-2 rounded-md text-base font-medium hover:text-brand-accent transition-colors"
+          >
+            Men
+          </Link>
+          <Link
+            to="/products?category=Women's Dresses"
+            onClick={closeMobileMenu}
+            className="block px-3 py-2 rounded-md text-base font-medium hover:text-brand-accent transition-colors"
+          >
+            Women
+          </Link>
+        </div>
+      )}
     </nav>
   );
 };

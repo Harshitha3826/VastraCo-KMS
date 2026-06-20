@@ -36,6 +36,14 @@ const getCategories = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
+    const { name, price } = req.body;
+    if (!name || price === undefined) {
+      return res.status(400).json({ error: 'Name and price are required' });
+    }
+    if (isNaN(price) || Number(price) < 0) {
+      return res.status(400).json({ error: 'Price must be a non-negative number' });
+    }
+
     const product = await ProductModel.createProduct(req.body);
     res.status(201).json(product);
   } catch (error) {
@@ -46,6 +54,11 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   try {
+    const { price } = req.body;
+    if (price !== undefined && (isNaN(price) || Number(price) < 0)) {
+      return res.status(400).json({ error: 'Price must be a non-negative number' });
+    }
+
     const product = await ProductModel.updateProduct(req.params.id, req.body);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
@@ -59,7 +72,10 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
   try {
-    await ProductModel.deleteProduct(req.params.id);
+    const deleted = await ProductModel.deleteProduct(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
     res.status(204).send();
   } catch (error) {
     console.error('deleteProduct error:', error);
@@ -78,10 +94,29 @@ const decrementStock = async (req, res) => {
     if (!updatedVariant) {
       return res.status(409).json({ error: 'Insufficient stock or variant not found' });
     }
-    
+
     res.status(200).json(updatedVariant);
   } catch (error) {
     console.error('decrementStock error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const restoreStock = async (req, res) => {
+  try {
+    const { quantity } = req.body;
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({ error: 'Valid quantity is required' });
+    }
+
+    const updatedVariant = await ProductModel.restoreStock(req.params.id, quantity);
+    if (!updatedVariant) {
+      return res.status(404).json({ error: 'Variant not found' });
+    }
+
+    res.status(200).json(updatedVariant);
+  } catch (error) {
+    console.error('restoreStock error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -93,5 +128,6 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
-  decrementStock
+  decrementStock,
+  restoreStock
 };

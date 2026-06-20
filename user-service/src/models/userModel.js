@@ -3,11 +3,9 @@ const bcrypt = require('bcrypt');
 
 const UserModel = {
   async createUser(name, email, password) {
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-
+    const passwordHash = await bcrypt.hash(password, 10);
     const result = await db.query(
-      `INSERT INTO users (name, email, password_hash) 
+      `INSERT INTO users (name, email, password_hash)
        VALUES ($1, $2, $3) RETURNING id, name, email, role, created_at`,
       [name, email, passwordHash]
     );
@@ -16,7 +14,7 @@ const UserModel = {
 
   async findByEmail(email) {
     const result = await db.query(
-      `SELECT * FROM users WHERE email = $1`,
+      `SELECT id, name, email, password_hash, role, created_at FROM users WHERE email = $1`,
       [email]
     );
     return result.rows[0];
