@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MessageCircle, X, Send, Mic, MicOff, ShoppingBag, Star } from 'lucide-react';
 import api from '../api/axios';
 
@@ -48,9 +48,10 @@ const SUGGESTIONS = [
   'Track my latest order',
 ];
 
-const MiniProductCard = ({ product }) => (
+const MiniProductCard = ({ product, onNavigate }) => (
   <Link
     to={`/products/${product.id}`}
+    onClick={onNavigate}
     className="flex flex-col bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
   >
     <div className="aspect-square overflow-hidden bg-gray-50">
@@ -101,6 +102,7 @@ const TypingIndicator = () => (
 );
 
 const AIAssistant = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -111,6 +113,11 @@ const AIAssistant = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
+
+  const handleProductNavigate = useCallback((productId) => {
+    setOpen(false);
+    navigate(`/products/${productId}`);
+  }, [navigate]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -313,7 +320,7 @@ const AIAssistant = () => {
                   {msg.role === 'assistant' && msg.products && msg.products.length > 0 && (
                     <div className="grid grid-cols-3 gap-1.5 w-full">
                       {msg.products.slice(0, 6).map((p) => (
-                        <MiniProductCard key={p.id} product={p} />
+                        <MiniProductCard key={p.id} product={p} onNavigate={() => handleProductNavigate(p.id)} />
                       ))}
                     </div>
                   )}
