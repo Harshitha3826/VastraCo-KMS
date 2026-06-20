@@ -97,6 +97,24 @@ services:
     networks:
       - vastraco-network
 
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    env_file:
+      - .env
+    environment:
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+      - ORDER_SERVICE_URL=http://order-service:3003
+    depends_on:
+      - product-service
+      - order-service
+    networks:
+      - vastraco-network
+
   frontend:
     build:
       context: ./frontend
@@ -108,6 +126,7 @@ services:
       - user-service
       - product-service
       - order-service
+      - ai-service
     networks:
       - vastraco-network
 

@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import CartDrawer from './components/CartDrawer';
 import ProtectedRoute from './components/ProtectedRoute';
+import AIAssistant from './components/AIAssistant';
 
 // Pages
 import Home from './pages/Home';
@@ -24,6 +25,7 @@ function App() {
             <Navbar />
             <CartDrawer />
             
+            <AIAssistant />
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
