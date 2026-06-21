@@ -53,9 +53,7 @@ services:
       retries: 5
 
   user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
+    image: harshithasrinivas03/user-service:latest
     restart: unless-stopped
     ports:
       - "3001:3001"
@@ -68,9 +66,7 @@ services:
       - vastraco-network
 
   product-service:
-    build:
-      context: ./product-service
-      dockerfile: Dockerfile
+    image: harshithasrinivas03/product-service:latest
     restart: unless-stopped
     ports:
       - "3002:3002"
@@ -83,9 +79,7 @@ services:
       - vastraco-network
 
   order-service:
-    build:
-      context: ./order-service
-      dockerfile: Dockerfile
+    image: harshithasrinivas03/order-service:latest
     restart: unless-stopped
     ports:
       - "3003:3003"
@@ -114,9 +108,7 @@ services:
       - vastraco-network
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: harshithasrinivas03/frontend-service:latest
     restart: unless-stopped
     ports:
       - "3000:80"
