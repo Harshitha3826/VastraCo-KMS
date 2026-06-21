@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import Optional
 
 from langchain_aws import ChatBedrockConverse
@@ -80,12 +81,23 @@ async def run_agent_session(
     if isinstance(content, str):
         ai_text = content
     elif isinstance(content, list):
+        # Only join text-type blocks; skip reasoningContent / thinking blocks
         ai_text = " ".join(
-            b.get("text", "") if isinstance(b, dict) else str(b)
+            b.get("text", "")
             for b in content
+            if isinstance(b, dict) and b.get("type") == "text" and b.get("text")
         ).strip()
+        if not ai_text:
+            # Fallback: join anything with a text field (older Nova versions)
+            ai_text = " ".join(
+                b.get("text", "") if isinstance(b, dict) else str(b)
+                for b in content
+            ).strip()
     else:
         ai_text = str(content)
+
+    # Strip inline <thinking>...</thinking> blocks that Nova sometimes leaks
+    ai_text = re.sub(r"<thinking>.*?</thinking>", "", ai_text, flags=re.DOTALL).strip()
 
     # Extract product results from the most recent search_products tool call
     products = []

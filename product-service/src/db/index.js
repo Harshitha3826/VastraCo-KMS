@@ -43,6 +43,18 @@ const initDb = async () => {
       )
     `);
 
+    // Image corrections — fix wrong Unsplash photo IDs in live DB
+    await client.query(`
+      UPDATE products SET image_url = 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=60'
+      WHERE name = 'Sequin Party Mini Dress'
+        AND image_url LIKE '%1518895312237%'
+    `);
+    await client.query(`
+      UPDATE products SET image_url = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop&q=60'
+      WHERE name = 'Bohemian Tie-Dye Maxi Dress'
+        AND image_url LIKE '%1571945153237%'
+    `);
+
     // Schema migrations — safe to run every startup on existing deployments
     const migrations = [
       `ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory VARCHAR(100)`,
@@ -444,7 +456,7 @@ const initDb = async () => {
           brand: "Global Desi", gender: "women", occasion: "casual, beach, vacation",
           style: "maxi", material: "cotton",
           rating: 4.5, review_count: 145, is_featured: false,
-          img: "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=500&auto=format&fit=crop&q=60",
+          img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&auto=format&fit=crop&q=60",
           tags: ["tie dye", "maxi", "bohemian", "casual", "western", "cotton", "women", "boho", "festival", "unique"],
           variants: [
             { size: "XS", color: "Multicolor", stock: 12 },
@@ -462,7 +474,7 @@ const initDb = async () => {
           brand: "Forever 21", gender: "women", occasion: "party, evening, celebration",
           style: "mini", material: "polyester",
           rating: 4.6, review_count: 312, is_featured: true,
-          img: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=500&auto=format&fit=crop&q=60",
+          img: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&auto=format&fit=crop&q=60",
           tags: ["sequin", "party", "evening", "mini", "western", "glam", "women", "night out", "shimmer", "celebration"],
           variants: [
             { size: "XS", color: "Gold", stock: 14 },
